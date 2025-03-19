@@ -75,6 +75,8 @@ function processUrl(url, method, body) {
     const { java, source } = this;
     var randomStr = generateRandomString();
     var aesKey = getFinalKey(randomStr);
+    java.log("rsak--"+randomStr)
+    java.log("aesk--"+aesKey)
 
     var urlParts = url.replace(/http:\/\/\d+(?=\/)/, "http://124.222.183.125").split("?");
     var params = method === "POST" ? (body || "") : (urlParts[1] || "");
