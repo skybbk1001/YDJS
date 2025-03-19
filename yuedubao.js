@@ -109,6 +109,14 @@ function localServiceAjax(url, method, body) {
     return response;
 }
 
+function localServiceAsync(url, method, body) {
+    const { java } = this;
+    var requestUrl = this.processUrl(url, method, body);
+    var response = java.ajax(requestUrl);
+    java.log(response);
+    return response;
+}
+
 function ajaxAll(urls) {
     const { java } = this;
     var processedUrls = [];
