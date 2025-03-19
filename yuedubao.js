@@ -120,3 +120,5 @@ function ajaxAll(urls) {
     }
     return java.ajaxAll(processedUrls);
 }
+
+test
