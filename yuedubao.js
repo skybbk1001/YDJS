@@ -72,7 +72,7 @@ function getLocalServerHeadersMap(appToken) {
 }
 
 function processUrl(url, method, body) {
-    const { java, source } = this;
+    const { java, cache } = this;
     var randomStr = generateRandomString();
     var aesKey = getFinalKey(randomStr);
     java.log("rsak--"+randomStr)
