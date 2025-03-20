@@ -85,7 +85,7 @@ function processUrl(url, method, body) {
     var timestamp = Packages.java.lang.System.currentTimeMillis().toString();
     var encryptedTime = this.aesEncrypt(aesKey, String(timestamp));
     
-    var headers = getLocalServerHeadersMap(cache.get("ydbao"));
+    var headers = getLocalServerHeadersMap(cache.get("ydbao")==null?"":cache.get("ydbao"));
     headers.encryptKey = this.rsaEncrypt(randomStr);
     headers.encryptType = "v1";
 
