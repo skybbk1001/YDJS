@@ -1,60 +1,75 @@
-const source_time = "1742387457506";
-
+// 常量定义
+const SOURCE_TIME = "1742387457506";
 const RSA_PUBLIC_KEY = "MIGfMA0GCSqGSIb3DQEBAQUAA4GNADCBiQKBgQCOTz9KHYYoG+hBG7R2lN98CDxW4D9WCT60hYxeTxvGrBGZzLL2euNj9pIaY27/+6WX1a7yGrDad6fUm1hgyt6unlV+p7axneBbaesvqAUnaVQqcot2+P5SQgKJsP7QZjZYhVPRsQgkeaCbb1OYfMc3RO8L4AHqTUK3LmTwUB7fCQIDAQAB";
+const BASE_API_URL = "http://124.222.183.125";
+const AES_KEY_PREFIX = "yuedubao";
+const AES_KEY_SUFFIX = "y*y%h#123";
+const CHARS = "abcdefghijklmnopqrstuvwxyz0123456789";
 
-const DEFAULT_HEADERS = (() => ({
-    version: "3.25.031915",
-    androidId: String(Packages.java.util.UUID.randomUUID()).replace(/-/g, "").slice(0, 16),
-    appToken: "",
-    Host: "124.222.183.125",
-    "Accept-Encoding": "gzip"
-}))();
+// 缓存对象
+const memoCache = {};
 
+// 默认请求头 - 使用立即执行函数只计算一次
+const DEFAULT_HEADERS = (() => {
+    return {
+        version: "3.25.031915",
+        androidId: String(Packages.java.util.UUID.randomUUID()).replace(/-/g, "").slice(0, 16),
+        appToken: "",
+        Host: "124.222.183.125",
+        "Accept-Encoding": "gzip"
+    };
+})();
+
+// Base64解码
 function b64d(text) {
     const { java } = this;
-    return text ? Array.isArray(text) 
-        ? text.filter(Boolean).map(x => java.base64Decode(String(x))).join(", ") 
-        : java.base64Decode(String(text)) 
-    : "";
+    if (!text) return "";
+    if (Array.isArray(text)) {
+        return text.filter(Boolean).map(x => java.base64Decode(String(x))).join(", ");
+    }
+    return java.base64Decode(String(text));
 }
 
-function generateRandomString(length) {
-    var chars = "abcdefghijklmnopqrstuvwxyz0123456789";
-    var result = "";
-    length = length || 16;
-    for (var i = 0; i < length; i++) {
-        result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+// 生成随机字符串
+function generateRandomString(length = 16) {
+       return Array.from({ length }, () => 
+           CHARS.charAt(Math.floor(Math.random() * CHARS.length))
+       ).join('');
+   }
+
+// 获取最终密钥 - 使用记忆化缓存
+function getFinalKey(randomStr) {
+    const cacheKey = `finalKey_${randomStr}`;
+    if (memoCache[cacheKey]) return memoCache[cacheKey];
+    
+    const { java } = this;
+    const combined = `${AES_KEY_PREFIX}${randomStr}${AES_KEY_SUFFIX}`;
+    const md5 = java.security.MessageDigest.getInstance("MD5");
+    md5.update(new java.lang.String(combined).getBytes("UTF-8"));
+    const hashBytes = md5.digest();
+    const hexHash = java.util.HexFormat.of().formatHex(hashBytes);
+
+    // 处理十六进制字符串
+    const evenChars = hexHash.split("").filter((_, i) => i % 2 === 0).join("").slice(4, 12);
+    const oddChars = hexHash.split("").filter((_, i) => i % 2 === 1).join("").slice(6, 14);
+
+    const result = evenChars + oddChars;
+    memoCache[cacheKey] = result;
     return result;
 }
 
-function getFinalKey(randomStr) {
-    let combined = `yuedubao${randomStr}y*y%h#123`;
-    let md5 = java.security.MessageDigest.getInstance("MD5");
-    md5.update(new java.lang.String(combined).getBytes("UTF-8"));
-    let hashBytes = md5.digest();
-    let hexHash = java.util.HexFormat.of().formatHex(hashBytes);
-
-    let processHexChars = (hexStr, isEven) => 
-        hexStr.split("").filter((_, i) => isEven ? (i % 2 === 0) : (i % 2 === 1)).join("");
-
-    let evenChars = processHexChars(hexHash, true).slice(4, 12);
-    let oddChars = processHexChars(hexHash, false).slice(6, 14);
-
-    return evenChars + oddChars;
-}
-
-function rsaEncrypt(text, publicKey) {
+// RSA加密
+function rsaEncrypt(text, publicKey = RSA_PUBLIC_KEY) {
     const { java } = this;
-    publicKey = publicKey || RSA_PUBLIC_KEY;
     return java.createAsymmetricCrypto("RSA/ECB/PKCS1Padding")
         .setPublicKey(java.base64DecodeToByteArray(publicKey))
         .encryptBase64(text);
 }
 
+// AES加密
 function aesEncrypt(aesKey, data) {
     const { java } = this;
-    var encrypted = java.createSymmetricCrypto("AES/ECB/PKCS5Padding", aesKey, null)
+    const encrypted = java.createSymmetricCrypto("AES/ECB/PKCS5Padding", aesKey, null)
         .encryptBase64(data);
     return String(encrypted)
         .replace(/\+/g, "-")
@@ -62,71 +77,80 @@ function aesEncrypt(aesKey, data) {
         .replace(/=+$/, "");
 }
 
+// 获取请求头
 function getLocalServerHeadersMap(appToken) {
-    var headers = {};
-    for (var key in DEFAULT_HEADERS) {
-        headers[key] = DEFAULT_HEADERS[key];
-    }
-    headers.appToken = appToken;
+    const headers = Object.assign({}, DEFAULT_HEADERS);
+    headers.appToken = appToken || headers.appToken;
     return headers;
 }
 
+// 处理URL并准备请求
 function processUrl(url, method, body) {
     const { java, cache } = this;
-    var randomStr = generateRandomString();
-    var aesKey = getFinalKey(randomStr);
-    java.log("rsak--"+randomStr)
-    java.log("aesk--"+aesKey)
+    const randomStr = generateRandomString();
+    const aesKey = getFinalKey(randomStr);
+    
+    // 记录日志
+    java.log("rsak--" + randomStr);
+    java.log("aesk--" + aesKey);
 
-    var urlParts = url.replace(/http:\/\/\d+(?=\/)/, "http://124.222.183.125").split("?");
-    var params = method === "POST" ? (body || "") : (urlParts[1] || "");
-    var encryptedParams = this.aesEncrypt(aesKey, params);
+    // 处理URL
+    const normalizedUrl = url.replace(/http:\/\/\d+(?=\/)/, BASE_API_URL);
+    const urlParts = normalizedUrl.split("?");
+    const baseUrl = urlParts[0];
     
-    var timestamp = Packages.java.lang.System.currentTimeMillis().toString();
-    var encryptedTime = this.aesEncrypt(aesKey, String(timestamp));
+    // 处理参数
+    const params = method === "POST" ? (body || "") : (urlParts[1] || "");
+    const encryptedParams = this.aesEncrypt(aesKey, params);
+
+    // 处理时间戳和token
+    const timestamp = Packages.java.lang.System.currentTimeMillis().toString();
+    const encryptedTime = this.aesEncrypt(aesKey, timestamp);
+    const token = cache.get("ydbao");
     
-    var headers = getLocalServerHeadersMap(cache.get("ydbao")==null?"":cache.get("ydbao"));
+    // 准备请求头
+    const headers = getLocalServerHeadersMap(token);
     headers.encryptKey = this.rsaEncrypt(randomStr);
     headers.encryptType = "v1";
 
-    var config = {
-        method: method,
-        headers: headers
-    };
+    // 创建请求配置
+    const config = { method, headers };
     
+    // 针对POST请求设置请求体
     if (method === "POST") {
         config.body = encryptedParams.match(/.{1,76}/g).join("\n");
-        return urlParts[0] + "?requestData=" + encryptedTime + "," + JSON.stringify(config);
+        return `${baseUrl}?requestData=${encryptedTime},${JSON.stringify(config)}`;
     }
-    return urlParts[0] + "?requestData=" + encryptedParams + "," + JSON.stringify(config);
+    
+    // GET请求
+    return `${baseUrl}?requestData=${encryptedParams},${JSON.stringify(config)}`;
 }
 
-function localServiceAjax(url, method, body) {
+// 统一的HTTP请求函数
+function localServiceRequest(url, method, body) {
     const { java } = this;
-    var requestUrl = this.processUrl(url, method, body);
-    var response = java.ajax(requestUrl);
+    const requestUrl = this.processUrl(url, method, body);
+    const response = java.ajax(requestUrl);
     java.log(response);
     return response;
+}
+
+// 向后兼容的函数
+function localServiceAjax(url, method, body) {
+    return this.localServiceRequest(url, method, body);
 }
 
 function localServiceAsync(url, method, body) {
-    const { java } = this;
-    var requestUrl = this.processUrl(url, method, body);
-    var response = java.ajax(requestUrl);
-    java.log(response);
-    return response;
+    return this.localServiceRequest(url, method, body);
 }
 
+// 批量请求
 function ajaxAll(urls) {
     const { java } = this;
-    var processedUrls = [];
-    for (var i = 0; i < urls.length; i++) {
-        var url = urls[i];
-        if (url.indexOf("http://124.222.183.125") === 0) {
-            processedUrls.push(this.processUrl(url, "GET"));
-        } else {
-            processedUrls.push(url);
-        }
-    }
+    const processedUrls = urls.map(url => {
+        return url.indexOf(BASE_API_URL) === 0
+            ? this.processUrl(url, "GET")
+            : url;
+    });
     return java.ajaxAll(processedUrls);
 }
