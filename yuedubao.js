@@ -131,7 +131,6 @@ function localServiceRequest(url, method, body) {
     const { java } = this;
     const requestUrl = this.processUrl(url, method, body);
     const response = java.ajax(requestUrl);
-    java.log(response);
     return response;
 }
 
