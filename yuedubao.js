@@ -40,15 +40,17 @@ function generateRandomString(length) {
 
 // 获取最终密钥 - 使用记忆化缓存
 function getFinalKey(randomStr) {
-    const cacheKey = `finalKey_${randomStr}`;
+    let cacheKey = `finalKey_${randomStr}`;
     if (memoCache[cacheKey]) return memoCache[cacheKey];
     
     const { java } = this;
-    const combined = `${AES_KEY_PREFIX}${randomStr}${AES_KEY_SUFFIX}`;
-    const md5 = Packages.java.security.MessageDigest.getInstance("MD5");
+    let combined = `${AES_KEY_PREFIX}${randomStr}${AES_KEY_SUFFIX}`;
+    let md5 = Packages.java.security.MessageDigest.getInstance("MD5");
     md5.update(new Packages.java.lang.String(combined).getBytes("UTF-8"));
-    const hashBytes = md5.digest();
-    const hexHash = Packages.java.util.HexFormat.of().formatHex(hashBytes);
+    let hashBytes = md5.digest();
+    java.log("test1")
+    let hexHash = Packages.java.util.HexFormat.of().formatHex(hashBytes);
+    java.log("test2")
 
     // 处理十六进制字符串
     const evenChars = hexHash.split("").filter((_, i) => i % 2 === 0).join("").slice(4, 12);
