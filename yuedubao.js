@@ -47,7 +47,7 @@ function getFinalKey(randomStr) {
     const md5 = java.security.MessageDigest.getInstance("MD5");
     md5.update(new java.lang.String(combined).getBytes("UTF-8"));
     const hashBytes = md5.digest();
-    const hexHash = java.util.HexFormat.of().formatHex(hashBytes);
+    const hexHash = Packages.java.util.HexFormat.of().formatHex(hashBytes);
 
     // 处理十六进制字符串
     const evenChars = hexHash.split("").filter((_, i) => i % 2 === 0).join("").slice(4, 12);
