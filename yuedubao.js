@@ -45,8 +45,8 @@ function getFinalKey(randomStr) {
     
     const { java } = this;
     const combined = `${AES_KEY_PREFIX}${randomStr}${AES_KEY_SUFFIX}`;
-    const md5 = java.security.MessageDigest.getInstance("MD5");
-    md5.update(new java.lang.String(combined).getBytes("UTF-8"));
+    const md5 = Packages.java.security.MessageDigest.getInstance("MD5");
+    md5.update(new Packages.java.lang.String(combined).getBytes("UTF-8"));
     const hashBytes = md5.digest();
     const hexHash = Packages.java.util.HexFormat.of().formatHex(hashBytes);
 
