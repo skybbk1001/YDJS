@@ -31,11 +31,12 @@ function b64d(text) {
 }
 
 // 生成随机字符串
-function generateRandomString(length = 16) {
-       return Array.from({ length }, () => 
-           CHARS.charAt(Math.floor(Math.random() * CHARS.length))
-       ).join('');
-   }
+function generateRandomString(length) {
+    if (length === undefined) length = 16;
+    return Array.from({ length }, () => 
+        CHARS.charAt(Math.floor(Math.random() * CHARS.length))
+    ).join('');
+}
 
 // 获取最终密钥 - 使用记忆化缓存
 function getFinalKey(randomStr) {
@@ -59,7 +60,8 @@ function getFinalKey(randomStr) {
 }
 
 // RSA加密
-function rsaEncrypt(text, publicKey = RSA_PUBLIC_KEY) {
+function rsaEncrypt(text, publicKey) {
+    if (publicKey === undefined) publicKey = RSA_PUBLIC_KEY;
     const { java } = this;
     return java.createAsymmetricCrypto("RSA/ECB/PKCS1Padding")
         .setPublicKey(java.base64DecodeToByteArray(publicKey))
