@@ -44,7 +44,6 @@ function getFinalKey(randomStr) {
     var md5 = Packages.java.security.MessageDigest.getInstance("MD5");
     md5.update(new Packages.java.lang.String(combined).getBytes("UTF-8"));
     var hashBytes = md5.digest();
-    java.log("test1");
 
     function bytesToHex(bytes) {
         var hexChars = [];
@@ -58,7 +57,6 @@ function getFinalKey(randomStr) {
         return hexChars.join("");
     }
     var hexHash = bytesToHex(hashBytes);
-    java.log("test2");
 
     var evenChars = hexHash.split("").filter(function(_, i) {
         return i % 2 === 0;
