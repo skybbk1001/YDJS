@@ -4,7 +4,7 @@ let errMsg = `⚠️ 书源安全警告
 请前往更新：https://skybook.pages.dev   <br>`;
 let comment = source.bookSourceComment;
 
-if (java.HMacBase64(comment, 'HmacSHA256', "skybook") !== expected) {
+if (java.HMacBase64(comment, 'HmacSHA256', "skybook") != expected) {
   java.longToast(errMsg);
   throw new Error(errMsg);
 }
