@@ -113,7 +113,7 @@ function processUrl(url, method, body) {
     var token = cache.get("ydbao");
     var headers = getLocalServerHeadersMap(token);
     headers.encryptKey = this.rsaEncrypt(randomStr);
-    headers.encryptType = "v1";
+    headers.encryptType = "v2";
 
     var config = { method: method, headers: headers };
     if (method === "POST") {
